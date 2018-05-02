@@ -349,7 +349,7 @@ contract mcr
             bytes4 currency = md.getCurrencyByIndex(i);
             if(currency!="ETH")
             {
-                btok=BasicToken(pd.getCurrenciesAddress(currency));
+                btok=BasicToken(pd.getCurrencyAssetAddress(currency));
                 uint currTokens=btok.balanceOf(poolAddress); //f1.getBalance(poolAddress,currency); 
                 if(md.getCurr3DaysAvg(currency)>0)
                 Vtp = SafeMaths.add(Vtp,SafeMaths.div(SafeMaths.mul(currTokens, 100), md.getCurr3DaysAvg(currency)));

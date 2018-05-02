@@ -19,9 +19,9 @@ pragma solidity ^0.4.11;
 import "./poolData.sol";
 import "./master.sol";
 import "./pool.sol";
-import "./fiatFaucet.sol";
+// import "./fiatFaucet.sol";
 import "./SafeMaths.sol";
-import "./usd.sol";
+// import "./usd.sol";
 import "./pool2.sol";
 import "./mcrData.sol";
 import "github.com/0xProject/contracts/contracts/Exchange.sol";
@@ -32,8 +32,8 @@ contract pool3
     poolData pd;
     master ms;
     pool p1;
-    fiatFaucet f1;
-    SupplyToken tok;
+    // fiatFaucet f1;
+    // SupplyToken tok;
     pool2 p2;
     Exchange exchange;
     mcrData md;
@@ -46,6 +46,7 @@ contract pool3
     
     address masterAddress;
     address exchangeContractAddress;
+    uint64 private constant _DECIMAL_1e18 = 1000000000000000000;
     
     event Liquidity(bytes16 type_of,bytes16 function_name);
     event CheckLiquidity(bytes16 type_of,uint balance);
@@ -70,11 +71,11 @@ contract pool3
         // poolDataAddress = _add;
         pd=poolData(poolDataAddress);
     }
-    function changeFiatFaucetAddress(address fiatFaucetAddress) onlyInternal
-    {
-        // fiatFaucetAddress = _add;
-        f1=fiatFaucet(fiatFaucetAddress);
-    }
+    // function changeFiatFaucetAddress(address fiatFaucetAddress) onlyInternal
+    // {
+    //     // fiatFaucetAddress = _add;
+    //     f1=fiatFaucet(fiatFaucetAddress);
+    // }
     function changePoolAddress(address _add) onlyInternal
     {
         poolAddress = _add;
@@ -178,7 +179,7 @@ contract pool3
         
     }
     /// @dev Checks the order fill status for a given order id of given currency.
-    function check0xOrderStatus(bytes4 curr,uint orderid) onlyInternal
+    function check0xOrderStatus(bytes8 curr,uint orderid) onlyInternal
     {
         // p1=pool(poolAddress);
         // pd=poolData1(poolDataAddress);
@@ -188,7 +189,7 @@ contract pool3
         
         exchange=Exchange(exchangeContractAddress);
         uint filledAmt=exchange.getUnavailableTakerTokenAmount(orderHash); //amount that is filled till now.(TakerToken)
-        bytes4 makerCurr;bytes4 takerCurr;uint makerAmt;uint takerAmt;bytes16 orderHashType;
+        bytes8 makerCurr;bytes8 takerCurr;uint makerAmt;uint takerAmt;bytes16 orderHashType;
         address makerTokenAddr;address takerTokenAddr;
         (makerCurr,makerAmt,takerCurr,takerAmt,orderHashType,)=pd.getOrderDetailsByHash(orderHash);
         if(orderHashType=="ELT")
@@ -196,7 +197,7 @@ contract pool3
             if(makerCurr=="ETH")
                 makerTokenAddr=getWETHAddress();
             else 
-                makerTokenAddr=f1.getCurrAddress(makerCurr);
+                makerTokenAddr=pd.getCurrencyAssetAddress(makerCurr);
             takerTokenAddr=pd.getInvestmentAssetAddress(takerCurr);
         }
         else if(orderHashType=="ILT")
@@ -205,8 +206,8 @@ contract pool3
             if(takerCurr=="ETH")
                 takerTokenAddr=getWETHAddress();
             else    
-                takerTokenAddr=f1.getCurrAddress(takerCurr);
-        } 
+                takerTokenAddr=pd.getCurrencyAssetAddress(takerCurr);
+        }
         
         else if(orderHashType=="RBT")
         {
@@ -255,7 +256,7 @@ contract pool3
         bytes16 orderType;       
         address makerTokenAddr;
         uint makerAmt;uint takerAmt;
-        bytes4 makerToken;bytes4 takerToken;
+        bytes8 makerToken;bytes8 takerToken;
         uint validTime;
         (makerToken,makerAmt,takerToken,takerAmt,orderType,validTime,)=pd.getOrderDetailsByHash(orderHash);
         address _0xMakerAddress=pd.get0xMakerAddress();
@@ -265,30 +266,30 @@ contract pool3
         if(orderType=="ELT")
         {
             // f1=fiatFaucet(fiatFaucetAddress);
-            makerTokenAddr=f1.getCurrAddress(makerToken);
+            makerTokenAddr=pd.getCurrencyAssetAddress(makerToken);
             // transfer selling amount to the makerAddress
-            f1.payoutTransferFromPool(_0xMakerAddress,makerToken,makerAmt);    
-            p1.close0xOrders(makerToken,orderId,expireTime);  
+            p1.transferPayout(_0xMakerAddress,makerToken,makerAmt);    
+            p1.close0xOrders(bytes4(makerToken),orderId,expireTime);  
         }
         else if(orderType=="ILT")
         {
             makerTokenAddr=pd.getInvestmentAssetAddress(makerToken);
             // transfer selling amount to the makerAddress from pool contract
             p1.transferFromPool(_0xMakerAddress,makerTokenAddr,makerAmt);
-            p1.close0xOrders(takerToken,orderId,expireTime);  //orderId is the index of Currency Asset at which hash is saved.
+            p1.close0xOrders(bytes4(takerToken),orderId,expireTime);  //orderId is the index of Currency Asset at which hash is saved.
         }
         else if(orderType=="RBT")
         {
             makerTokenAddr=pd.getInvestmentAssetAddress(makerToken);
             // transfer selling amount to the makerAddress from pool contract
             p1.transferFromPool(_0xMakerAddress,makerTokenAddr,makerAmt);
-            p1.close0xOrders(makerToken,orderId,expireTime);  // orderId is the index of allRebalancingOrderHash.
+            p1.close0xOrders(bytes4(makerToken),orderId,expireTime);  // orderId is the index of allRebalancingOrderHash.
         }
         pd.updateZeroExOrderStatus(orderHash,1);
     }
 
     /// @dev Checks Excess or insufficient liquidity trade conditions for a given currency.
-    function checkLiquidity(bytes4 curr) onlyInternal returns(uint8 check,uint CABalance)
+    function checkLiquidity(bytes8 curr) onlyInternal returns(uint8 check,uint CABalance)
     {
         // ms=master(masterAddress);
         // md=mcrData(mcrDataAddress);
@@ -297,7 +298,7 @@ contract pool3
             uint64 baseMin;
             uint64 varMin;
             (,baseMin,varMin)=pd.getCurrencyAssetDetails(curr);
-            CABalance=SafeMaths.div(getCurrencyAssetsBalance(curr),(10**18));
+            CABalance=SafeMaths.div(getCurrencyAssetsBalance(curr),_DECIMAL_1e18);
             //Excess liquidity trade
             if(CABalance>SafeMaths.mul(2,(SafeMaths.add(baseMin,varMin))))
             {   
@@ -313,7 +314,7 @@ contract pool3
         }
    }
    /// @dev Creates Excess liquidity trading order for a given currency and a given balance.
-    function ExcessLiquidityTrading(bytes4 curr,uint CABalance) onlyInternal
+    function ExcessLiquidityTrading(bytes8 curr,uint CABalance) onlyInternal
     { 
         // ms=master(masterAddress);
         // md=mcrData(mcrDataAddress);
@@ -348,7 +349,7 @@ contract pool3
         }
     }
     /// @dev Creates/cancels insufficient liquidity trading order for a given currency and a given balance.
-    function InsufficientLiquidityTrading(bytes4 curr,uint CABalance,uint8 cancel) onlyInternal
+    function InsufficientLiquidityTrading(bytes8 curr,uint CABalance,uint8 cancel) onlyInternal
     {
         // pd = poolData1(poolDataAddress);
         uint64 baseMin;
@@ -383,7 +384,7 @@ contract pool3
         }
     }
     /// @dev Cancels insufficient liquidity trading order and creates a new order for a new taker amount for a given currency.
-    function cancelLastInsufficientTradingOrder(bytes4 curr,uint newTakerAmt) onlyInternal
+    function cancelLastInsufficientTradingOrder(bytes8 curr,uint newTakerAmt) onlyInternal
     {
         // pd = poolData1(poolDataAddress);
         uint index=SafeMaths.sub(pd.getCurrAllOrderHashLength(curr),1);
@@ -391,7 +392,7 @@ contract pool3
         //get last 0xOrderhash taker amount (currency asset amount)
         uint lastTakerAmt;
         (,,,lastTakerAmt,,,)=pd.getOrderDetailsByHash(lastCurrHash);
-        lastTakerAmt=SafeMaths.div(lastTakerAmt,(10**18));
+        lastTakerAmt=SafeMaths.div(lastTakerAmt,_DECIMAL_1e18);
         if(lastTakerAmt<newTakerAmt)
         {
             check0xOrderStatus(curr,index);// transfer previous order amount
@@ -407,7 +408,7 @@ contract pool3
         }
     }
     /// @dev Initiates all 0x trading orders.
-    function zeroExOrders(bytes4 curr,uint makerAmt,uint takerAmt,bytes16 _type,uint8 cancel) internal
+    function zeroExOrders(bytes8 curr,uint makerAmt,uint takerAmt,bytes16 _type,uint8 cancel) internal
     {
         bytes8 MINIACurr;
         uint expirationTimeInMilliSec;
@@ -429,41 +430,41 @@ contract pool3
         else
         {
             if(_type=="ELT")
-                makerTokenAddr=f1.getCurrAddress(bytes16(curr));
+                makerTokenAddr=pd.getCurrencyAssetAddress(curr);
             else if(_type=="ILT")
-                takerTokenAddr=f1.getCurrAddress(bytes16(curr)); 
+                takerTokenAddr=pd.getCurrencyAssetAddress(curr); 
         }
         if(_type=="ELT")
         {
             takerTokenAddr=pd.getInvestmentAssetAddress(MINIACurr);
             expirationTimeInMilliSec=SafeMaths.add(now,pd.getOrderExpirationTime(_type));   //12 hours in milliseconds
-            orderHash=exchange.getOrderHash([pd.get0xMakerAddress(),pd.get0xTakerAddress(),makerTokenAddr,takerTokenAddr,pd.get0xFeeRecipient()],[SafeMaths.mul(makerAmt,10**18),takerAmt,pd.get0xMakerFee(),pd.get0xTakerFee(),expirationTimeInMilliSec,pd.getOrderSalt()]);
+            orderHash=exchange.getOrderHash([pd.get0xMakerAddress(),pd.get0xTakerAddress(),makerTokenAddr,takerTokenAddr,pd.get0xFeeRecipient()],[SafeMaths.mul(makerAmt,_DECIMAL_1e18),takerAmt,pd.get0xMakerFee(),pd.get0xTakerFee(),expirationTimeInMilliSec,pd.getOrderSalt()]);
             pd.setCurrOrderHash(curr,orderHash);
             pd.updateLiquidityOrderStatus(curr,_type,1);
-            pd.pushOrderDetails(orderHash,curr,SafeMaths.mul(makerAmt,10**18),bytes4(MINIACurr),takerAmt,_type,expirationTimeInMilliSec);
+            pd.pushOrderDetails(orderHash,curr,SafeMaths.mul(makerAmt,_DECIMAL_1e18),bytes4(MINIACurr),takerAmt,_type,expirationTimeInMilliSec);
             //event
-            ZeroExOrders("Call0x",makerTokenAddr,takerTokenAddr,SafeMaths.mul(makerAmt,10**18),takerAmt,expirationTimeInMilliSec,orderHash);
+            ZeroExOrders("Call0x",makerTokenAddr,takerTokenAddr,SafeMaths.mul(makerAmt,_DECIMAL_1e18),takerAmt,expirationTimeInMilliSec,orderHash);
         }
                  
         else if(_type=="ILT")
         {
             makerTokenAddr=pd.getInvestmentAssetAddress(MAXIACurr); 
             expirationTimeInMilliSec=SafeMaths.add(now,pd.getOrderExpirationTime(_type));
-            orderHash=exchange.getOrderHash([pd.get0xMakerAddress(),pd.get0xTakerAddress(),makerTokenAddr,takerTokenAddr,pd.get0xFeeRecipient()],[makerAmt,SafeMaths.mul(takerAmt,10**18),pd.get0xMakerFee(),pd.get0xTakerFee(),expirationTimeInMilliSec,pd.getOrderSalt()]);
+            orderHash=exchange.getOrderHash([pd.get0xMakerAddress(),pd.get0xTakerAddress(),makerTokenAddr,takerTokenAddr,pd.get0xFeeRecipient()],[makerAmt,SafeMaths.mul(takerAmt,_DECIMAL_1e18),pd.get0xMakerFee(),pd.get0xTakerFee(),expirationTimeInMilliSec,pd.getOrderSalt()]);
             pd.setCurrOrderHash(curr,orderHash);  
             pd.updateLiquidityOrderStatus(curr,_type,1);
-            pd.pushOrderDetails(orderHash,bytes4(MAXIACurr),makerAmt,curr,SafeMaths.mul(takerAmt,10**18),_type,expirationTimeInMilliSec);
+            pd.pushOrderDetails(orderHash,bytes4(MAXIACurr),makerAmt,curr,SafeMaths.mul(takerAmt,_DECIMAL_1e18),_type,expirationTimeInMilliSec);
             if(cancel==1)
             {
                 // saving last orderHash
                 setOrderCancelHashValue(curr,orderHash);
             }
                 //event
-                ZeroExOrders("Call0x",makerTokenAddr,takerTokenAddr,makerAmt,SafeMaths.mul(takerAmt,10**18),expirationTimeInMilliSec,orderHash);
+                ZeroExOrders("Call0x",makerTokenAddr,takerTokenAddr,makerAmt,SafeMaths.mul(takerAmt,_DECIMAL_1e18),expirationTimeInMilliSec,orderHash);
             }  
     }
 
-    function setOrderCancelHashValue(bytes4 curr,bytes32 orderHash) internal
+    function setOrderCancelHashValue(bytes8 curr,bytes32 orderHash) internal
     {
         // pd = poolData1(poolDataAddress);
         uint lastIndex=SafeMaths.sub(pd.getCurrAllOrderHashLength(curr),1);
@@ -481,7 +482,7 @@ contract pool3
     }
    
      /// @dev Get currency asset balance for a given currency name.
-    function getCurrencyAssetsBalance(bytes4 curr) constant returns(uint CABalance)
+    function getCurrencyAssetsBalance(bytes8 curr) constant returns(uint CABalance)
     {
         // f1=fiatFaucet(fiatFaucetAddress);   
         // p1=pool(poolAddress);
@@ -491,7 +492,7 @@ contract pool3
         }
         else
         {          
-            CABalance=f1.getBalance(poolAddress,bytes16(curr)); 
+            CABalance=p1.getBalanceOfCurrencyAsset(curr); 
         } 
        
     }
@@ -500,7 +501,7 @@ contract pool3
     /// @return CARateX100 currency asset balance*100.
     /// @return baseMin minimum base amount required in pool.
     /// @return varMin  minimum variable amount required in pool.
-    function getCurrencyAssetDetails(bytes4 curr) constant returns(uint CABalance,uint CARateX100,uint baseMin,uint varMin)
+    function getCurrencyAssetDetails(bytes8 curr) constant returns(uint CABalance,uint CARateX100,uint baseMin,uint varMin)
     {
         // md=mcrData(mcrDataAddress);
         // pd=poolData1(poolDataAddress);
@@ -516,19 +517,19 @@ contract pool3
         pd.changeInvestmentAssetHoldingPerc(_curr,_minPercX100,_maxPercX100);
     }
     // update currency asset base min and var min
-    function updateCurrencyAssetDetails(bytes4 _curr,uint64 _baseMin)onlyInternal
+    function updateCurrencyAssetDetails(bytes8 _curr,uint64 _baseMin)onlyInternal
     {
         // pd=poolData1(poolDataAddress);
         pd.changeCurrencyAssetBaseMin(_curr,_baseMin);
     }
      // add new investment asset currency.
-    function addInvestmentAssetsDetails(bytes8 curr_name,address curr,uint64 _minHoldingPercX100,uint64 _maxHoldingPercX100) onlyInternal
+    function addInvestmentAssetsDetails(bytes8 curr_name,address curr,uint64 _minHoldingPercX100,uint64 _maxHoldingPercX100,uint8 _decimals) onlyInternal
     {
         // pd = poolData1(poolDataAddress);
-        uint8 decimals;
-        tok=SupplyToken(curr);
-        decimals=tok.decimals();
+        // uint8 decimals;
+        // tok=SupplyToken(curr);
+        // decimals=tok.decimals();
         pd.addInvestmentCurrency(curr_name);
-        pd.pushInvestmentAssetsDetails(curr_name,curr,1,_minHoldingPercX100,_maxHoldingPercX100,decimals);
+        pd.pushInvestmentAssetsDetails(curr_name,curr,1,_minHoldingPercX100,_maxHoldingPercX100,18);
      }
 }

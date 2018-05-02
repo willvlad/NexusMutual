@@ -313,7 +313,7 @@ contract pool2
         else
         {
             // f1=fiatFaucet(fiatFaucetAddress);
-            btok=BasicToken(pd.getCurrenciesAddress(curr));
+            btok=BasicToken(pd.getCurrencyAssetAddress(curr));
             balance = btok.balanceOf(poolAddress);
             //Check if pool has enough fiat crypto balance
             if(balance >= sumAssured_1e18)

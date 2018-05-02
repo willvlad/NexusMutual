@@ -38,7 +38,6 @@ contract poolData
     bytes32[] public allAPIcall;
     // bytes4[] allCurrencies;
     
-    mapping(bytes4=>address) currencies;
     struct apiId
     {
         bytes8 type_of;
@@ -58,14 +57,14 @@ contract poolData
         uint8 status;             //1 for active,0 for inactive
         uint64 minHoldingPercX100;
         uint64 maxHoldingPercX100; 
-        uint64 decimals;   
+        uint8 decimals;   
     }
   
     struct IARankDetails
     {
-        bytes16 MAXIACurr;
+        bytes8 MAXIACurr;
         uint64 MAXRate;
-        bytes16 MINIACurr;
+        bytes8 MINIACurr;
         uint64 MINRate;
     }
     // allCurrencies CURR;
@@ -75,16 +74,13 @@ contract poolData
         orderSalt=99033804502856343259430181946001007533635816863503102978577997033734866165564;
         NULL_ADDRESS= 0x0000000000000000000000000000000000000000;  
         ordersExpirationTime["ELT"]=SafeMaths.mul64(3600,12); // Excess liquidity trade order time 12 hours
-        ordersExpirationTime["ILT"]=SafeMaths.mul64(3600,6); // Insufficient liquidity trade order time 6 hours
+        ordersExpirationTime["ILT"]=SafeMaths.mul64(3600,6);  // Insufficient liquidity trade order time 6 hours
         ordersExpirationTime["RBT"]=SafeMaths.mul64(3600,20); // Rebalancing trade order time 20 hours
         makerFee=0;
         takerFee=0;
         feeRecipient=0x0000000000000000000000000000000000000000;
         taker=0x0000000000000000000000000000000000000000;
         IARatesTime=SafeMaths.mul64(SafeMaths.mul64(24,60),60); //24 hours in seconds
-        currencies["ETH"]=0x00;
-        currencies["DAI"]=0x00;
-        
     }
     IARankDetails[] allIARankDetails;
     mapping(uint64=>uint) datewiseId;
@@ -114,9 +110,9 @@ contract poolData
     
     struct Order
     {
-        bytes4 makerCurr;
+        bytes8 makerCurr;
         uint makerAmt; // in 10^decimal
-        bytes4 takerCurr;
+        bytes8 takerCurr;
         uint takerAmt;
         bytes16 orderHashType;
         uint orderExpireTime;
@@ -193,13 +189,13 @@ contract poolData
     /// @param takerAmt taker amount.
     /// @param orderHashType type of order hash.
     /// @param orderExpireTime expire time for order.
-    function pushOrderDetails(bytes32 orderHash,bytes4 makerCurr,uint makerAmt,bytes4 takerCurr,uint  takerAmt
+    function pushOrderDetails(bytes32 orderHash,bytes8 makerCurr,uint makerAmt,bytes8 takerCurr,uint  takerAmt
         ,bytes16 orderHashType,uint orderExpireTime) onlyInternal
     {
         allOrders[orderHash]=Order(makerCurr,makerAmt,takerCurr,takerAmt,orderHashType,orderExpireTime,"");
     }     
     /// @dev Gets 0x order details for a given hash.
-    function getOrderDetailsByHash(bytes32 orderHash) constant returns(bytes4 makerCurr,uint makerAmt,bytes4 takerCurr,uint takerAmt,bytes16 orderHashType,uint orderExpireTime,bytes32 cancelOrderHash)
+    function getOrderDetailsByHash(bytes32 orderHash) constant returns(bytes8 makerCurr,uint makerAmt,bytes8 takerCurr,uint takerAmt,bytes16 orderHashType,uint orderExpireTime,bytes32 cancelOrderHash)
     {
         return (allOrders[orderHash].makerCurr,allOrders[orderHash].makerAmt,allOrders[orderHash].takerCurr,allOrders[orderHash].takerAmt,allOrders[orderHash].orderHashType,allOrders[orderHash].orderExpireTime,allOrders[orderHash].cancelOrderHash);
     }
@@ -300,18 +296,18 @@ contract poolData
     /// @param MINIACurr Minimum ranked investment asset currency.
     /// @param MINRate Minimum ranked investment asset rate.
     /// @param date in yyyymmdd.
-    function saveIARankDetails(bytes16 MAXIACurr,uint64 MAXRate,bytes16 MINIACurr,uint64 MINRate,uint64 date) onlyInternal
+    function saveIARankDetails(bytes8 MAXIACurr,uint64 MAXRate,bytes8 MINIACurr,uint64 MINRate,uint64 date) onlyInternal
     {
         allIARankDetails.push(IARankDetails(MAXIACurr,MAXRate,MINIACurr,MINRate));
         datewiseId[date]=SafeMaths.sub(allIARankDetails.length,1);
     }
     /// @dev Gets investment asset rank details by given index.
-    function getIARankDetailsByIndex(uint index) constant returns(bytes16 MAXIACurr,uint64 MAXRate,bytes16 MINIACurr,uint64 MINRate)
+    function getIARankDetailsByIndex(uint index) constant returns(bytes8 MAXIACurr,uint64 MAXRate,bytes8 MINIACurr,uint64 MINRate)
     {
         return (allIARankDetails[index].MAXIACurr,allIARankDetails[index].MAXRate,allIARankDetails[index].MINIACurr,allIARankDetails[index].MINRate);
     }
     /// @dev Gets investment asset rank details by given date.
-    function getIARankDetailsByDate(uint64 date) constant returns(bytes16 MAXIACurr,uint64 MAXRate,bytes16 MINIACurr,uint64 MINRate)
+    function getIARankDetailsByDate(uint64 date) constant returns(bytes8 MAXIACurr,uint64 MAXRate,bytes8 MINIACurr,uint64 MINRate)
     {
         uint index=datewiseId[date];
         return (allIARankDetails[index].MAXIACurr,allIARankDetails[index].MAXRate,allIARankDetails[index].MINIACurr,allIARankDetails[index].MINRate);
@@ -458,33 +454,33 @@ contract poolData
         return variationPercX100;
     }
     /// @dev Pushes currency asset details for a given currency.
-    function pushCurrencyAssetsVarBase(bytes4 _curr,uint64 _baseMin) onlyInternal
+    function pushCurrencyAssetsVarBase(bytes8 _curr,uint64 _baseMin) onlyInternal
     {
         allCurrencyAssetsVarBase[_curr]=currencyAssets(_baseMin,0);
         // _varMin is 0 initially.
     }
     /// @dev Gets currency asset details for a given currency.
-    function getCurrencyAssetVarBase(bytes4 _curr) constant returns(bytes4 curr,uint64 baseMin,uint64 varMin)
+    function getCurrencyAssetVarBase(bytes8 _curr) constant returns(bytes8 curr,uint64 baseMin,uint64 varMin)
     {
         return(_curr,allCurrencyAssetsVarBase[_curr].baseMin,allCurrencyAssetsVarBase[_curr].varMin);
     }
     /// @dev Gets minimum variable value for currency asset.
-    function getCurrencyAssetVarMin(bytes4 _curr) constant returns(uint64 varMin)
+    function getCurrencyAssetVarMin(bytes8 _curr) constant returns(uint64 varMin)
     {
         return allCurrencyAssetsVarBase[_curr].varMin;
     }
     /// @dev Gets  base minimum of  a given currency asset.
-    function getCurrencyAssetBaseMin(bytes4 _curr) constant returns(uint64 baseMin)
+    function getCurrencyAssetBaseMin(bytes8 _curr) constant returns(uint64 baseMin)
     {
         return allCurrencyAssetsVarBase[_curr].baseMin;
     }
     /// @dev changes base minimum of a given currency asset.
-    function changeCurrencyAssetBaseMin(bytes4 _curr,uint64 _baseMin) onlyInternal
+    function changeCurrencyAssetBaseMin(bytes8 _curr,uint64 _baseMin) onlyInternal
     {
         allCurrencyAssetsVarBase[_curr].baseMin=_baseMin;
     }
     /// @dev changes variable minimum of a given currency asset.
-    function changeCurrencyAssetVarMin(bytes4 _curr,uint64 _varMin) onlyInternal
+    function changeCurrencyAssetVarMin(bytes8 _curr,uint64 _varMin) onlyInternal
     {
         allCurrencyAssetsVarBase[_curr].varMin=_varMin;
     }
@@ -495,17 +491,17 @@ contract poolData
     /// @param _minHoldingPercX100 minimum holding percentage*100.
     /// @param _maxHoldingPercX100 maximum holding percentage*100.
     /// @param decimals in ERC20 token.
-    function pushInvestmentAssetsDetails(bytes8 _curr,address _currAddress,uint8 _status,uint64 _minHoldingPercX100,uint64 _maxHoldingPercX100,uint64 decimals) onlyInternal
+    function pushInvestmentAssetsDetails(bytes8 _curr,address _currAddress,uint8 _status,uint64 _minHoldingPercX100,uint64 _maxHoldingPercX100,uint8 decimals) onlyInternal
     {
         allInvestmentAssets[_curr]=investmentAssets(_currAddress,_status,_minHoldingPercX100,_maxHoldingPercX100,decimals);
     }
     /// @dev Updates investment asset decimals.
-    function updateInvestmentAssetDecimals(bytes8 _curr,uint64 _newDecimal) onlyInternal
+    function updateInvestmentAssetDecimals(bytes8 _curr,uint8 _newDecimal) onlyInternal
     {
         allInvestmentAssets[_curr].decimals=_newDecimal;
     }
     /// @dev Gets investment asset decimals.
-    function getInvestmentAssetDecimals(bytes8 _curr) constant returns(uint64 decimal)
+    function getInvestmentAssetDecimals(bytes8 _curr) constant returns(uint8 decimal)
     {
         return allInvestmentAssets[_curr].decimals;
     }
@@ -521,7 +517,7 @@ contract poolData
         allInvestmentAssets[_curr].maxHoldingPercX100=_maxPercX100;
     }   
     /// @dev Gets investment asset details of a given currency;
-    function getInvestmentAssetDetails(bytes8 _curr) constant returns(bytes8 curr,address currAddress,uint8 status,uint64 minHoldingPerc,uint64 maxHoldingPerc,uint64 decimals)
+    function getInvestmentAssetDetails(bytes8 _curr) constant returns(bytes8 curr,address currAddress,uint8 status,uint64 minHoldingPerc,uint64 maxHoldingPerc,uint8 decimals)
     {
         return(_curr,allInvestmentAssets[_curr].currAddress,allInvestmentAssets[_curr].status,allInvestmentAssets[_curr].minHoldingPercX100,allInvestmentAssets[_curr].maxHoldingPercX100,allInvestmentAssets[_curr].decimals);
     }
@@ -558,17 +554,17 @@ contract poolData
     /// @param _minHoldingPercX100 minimum holding percentage*100.
     /// @param _maxHoldingPercX100 maximum holding percentage*100.
     /// @param decimals in ERC20 token.
-    function pushCurrencyAssetsDetails(bytes8 _curr,address _currAddress,uint8 _status,uint64 _minHoldingPercX100,uint64 _maxHoldingPercX100,uint64 decimals) onlyInternal
+    function pushCurrencyAssetsDetails(bytes8 _curr,address _currAddress,uint8 _status,uint64 _minHoldingPercX100,uint64 _maxHoldingPercX100,uint8 decimals) onlyInternal
     {
         allCurrencyAssets[_curr]=investmentAssets(_currAddress,_status,_minHoldingPercX100,_maxHoldingPercX100,decimals);
     }
     /// @dev Updates Currency asset decimals.
-    function updateCurrencyAssetDecimals(bytes8 _curr,uint64 _newDecimal) onlyInternal
+    function updateCurrencyAssetDecimals(bytes8 _curr,uint8 _newDecimal) onlyInternal
     {
         allCurrencyAssets[_curr].decimals=_newDecimal;
     }
     /// @dev Gets Currency asset decimals.
-    function getCurrencyAssetDecimals(bytes8 _curr) constant returns(uint64 decimal)
+    function getCurrencyAssetDecimals(bytes8 _curr) constant returns(uint8 decimal)
     {
         return allCurrencyAssets[_curr].decimals;
     }
@@ -577,6 +573,11 @@ contract poolData
     {
         allCurrencyAssets[_curr].status=_status;
     }
+    /// @dev Gets Currency asset token address.
+    function changeCurrencyAssetAddress(bytes8 _curr,address _currAdd) onlyInternal
+    {
+        allCurrencyAssets[_curr].currAddress = _currAdd;
+    }
     /// @dev Changes the Currency asset Holding percentage of a given currency.
     function changeCurrencyAssetHoldingPerc(bytes8 _curr,uint64 _minPercX100,uint64 _maxPercX100) onlyInternal
     {
@@ -584,7 +585,7 @@ contract poolData
         allCurrencyAssets[_curr].maxHoldingPercX100=_maxPercX100;
     }   
     /// @dev Gets Currency asset details of a given currency;
-    function getCurrencyAssetDetails(bytes8 _curr) constant returns(bytes8 curr,address currAddress,uint8 status,uint64 minHoldingPerc,uint64 maxHoldingPerc,uint64 decimals)
+    function getCurrencyAssetDetails(bytes8 _curr) constant returns(bytes8 curr,address currAddress,uint8 status,uint64 minHoldingPerc,uint64 maxHoldingPerc,uint8 decimals)
     {
         return(_curr,allCurrencyAssets[_curr].currAddress,allCurrencyAssets[_curr].status,allCurrencyAssets[_curr].minHoldingPercX100,allCurrencyAssets[_curr].maxHoldingPercX100,allCurrencyAssets[_curr].decimals);
     }
@@ -614,17 +615,17 @@ contract poolData
         return allCurrencyAssets[_curr].minHoldingPercX100;
     }
 
-    /// @dev Gets Faucet Multiplier
-    function getFaucetCurrMul() constant returns(uint32 fcm)
-    {
-        fcm = faucetCurrMultiplier;
-    }
-    /// @dev Changes Faucet Multiplier
-    /// @param fcm New Faucet Multiplier
-    function changeFaucetCurrMul(uint32 fcm) onlyOwner
-    {
-        faucetCurrMultiplier = fcm;
-    }
+    // /// @dev Gets Faucet Multiplier
+    // function getFaucetCurrMul() constant returns(uint32 fcm)
+    // {
+    //     fcm = faucetCurrMultiplier;
+    // }
+    // /// @dev Changes Faucet Multiplier
+    // /// @param fcm New Faucet Multiplier
+    // function changeFaucetCurrMul(uint32 fcm) onlyOwner
+    // {
+    //     faucetCurrMultiplier = fcm;
+    // }
     /// @dev Stores Currency exchange URL of a given currency.
     /// @param curr Currency Name.
     /// @param url Currency exchange URL 
@@ -716,16 +717,5 @@ contract poolData
     {
         return(allAPIid[myid].type_of,allAPIid[myid].currency,allAPIid[myid].id,allAPIid[myid].dateAdd,allAPIid[myid].dateUpd);
     }
-    function setCurrenciesAddress(bytes4 curr,address curr_add)onlyInternal
-    {
-        currencies[curr]=curr_add;
-    }
-    function getCurrenciesAddress(bytes4 curr)constant returns (address curr_add)
-    {
-       curr_add=currencies[curr];
-    }
-    // function addCurrency(address _add , bytes16 currName) onlyInternal
-    // {
-    //     currencies[currName] = _add;
-    // }
+    
 }

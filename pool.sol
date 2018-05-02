@@ -23,7 +23,7 @@ import "./poolData.sol";
 import "./quotation2.sol";
 import "./master.sol";
 import "./pool2.sol";
-import "./usd.sol";
+// import "./usd.sol";
 import "./mcr.sol";
 import "./mcrData.sol";
 import "./StandardToken.sol";
@@ -403,6 +403,13 @@ contract pool is usingOraclize{
         btok=BasicToken(currAddress);
         return btok.balanceOf(poolAddress);
     }
+    ///@dev Gets pool balance of a given investmentasset.
+    function getBalanceOfCurrencyAsset(bytes8 _curr) constant returns(uint balance)
+    {
+        // pd = poolData1(poolDataAddress);
+        btok=BasicToken(pd.getCurrencyAssetAddress(_curr));
+        return btok.balanceOf(poolAddress);
+    }
     function transferIAFromPool(address _newPoolAddr) onlyOwner
     {
         // pd = poolData1(poolDataAddress);
@@ -413,9 +420,9 @@ contract pool is usingOraclize{
             transferIAFromPool(_newPoolAddr,curr_addr);
         }   
     }
-    function  transferPayout(address _to, bytes4 _curr, uint _value) onlyInternal
+    function  transferPayout(address _to, bytes8 _curr, uint _value) onlyInternal
     {
-        btok=BasicToken(pd.getCurrenciesAddress(_curr));
+        btok=BasicToken(pd.getCurrencyAssetAddress(_curr));
         if(btok.balanceOf(this)>_value)
             btok.transfer(_to, _value);
     }
@@ -450,7 +457,7 @@ contract pool is usingOraclize{
             if(makerCurr=="ETH")
                 makerCurrAddr=pd.getWETHAddress();
             else
-                makerCurrAddr=pd.getCurrenciesAddress(makerCurr);
+                makerCurrAddr=pd.getCurrencyAssetAddress(makerCurr);
             takerCurrAddr=pd.getInvestmentAssetAddress(takerCurr);
         }
         else if(orderType=="ILT")
@@ -459,7 +466,7 @@ contract pool is usingOraclize{
             if(takerCurr=="ETH")
                 takerCurrAddr=pd.getWETHAddress();
             else
-                takerCurrAddr=pd.getCurrenciesAddress(takerCurr);
+                takerCurrAddr=pd.getCurrencyAssetAddress(takerCurr);
         }
         else if(orderType=="RBT")
         {
@@ -474,7 +481,7 @@ contract pool is usingOraclize{
     }
     function makeCoverUsingCA(uint8 prodId, address smartCAdd,bytes4 coverCurr,uint[] coverDetails,uint16 coverPeriod, uint8 _v, bytes32 _r, bytes32 _s) isMemberAndcheckPause
     {
-        stok=StandardToken(pd.getCurrenciesAddress(coverCurr));
+        stok=StandardToken(pd.getCurrencyAssetAddress(coverCurr));
         stok.transferFrom(msg.sender,this,coverDetails[2]);
         q2.verifyCoverDetails(prodId,msg.sender,smartCAdd,coverCurr,coverDetails,coverPeriod,_v,_r,_s);
     }
