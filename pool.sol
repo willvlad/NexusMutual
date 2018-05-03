@@ -230,12 +230,12 @@ contract pool is usingOraclize{
         saveApiDetails(myid,"MCRF",id);
     }
     
-    /// @dev Oraclize call to Subtract CSA for a given quote id.
-    function subtractQuotationOracalise(uint id) onlyInternal
-    {
-        bytes32 myid = oraclize_query("URL",strConcat("http://a1.nexusmutual.io/api/claims/subtractQuoteSA_hash/",uint2str(id)),50000);
-        saveApiDetails(myid,"SUB",id);     
-    }
+    // /// @dev Oraclize call to Subtract CSA for a given quote id.
+    // function subtractQuotationOracalise(uint id) onlyInternal
+    // {
+    //     bytes32 myid = oraclize_query("URL",strConcat("http://a1.nexusmutual.io/api/claims/subtractQuoteSA_hash/",uint2str(id)),50000);
+    //     saveApiDetails(myid,"SUB",id);     
+    // }
     /// @dev Oraclize call to update investment asset rates.
     function saveIADetailsOracalise(uint64 time) onlyInternal
     {
@@ -381,20 +381,12 @@ contract pool is usingOraclize{
         // tc1.removeFromPoolFund("ETH",valueWEI);
         
         
-        
+        transferPayout(msg.sender,curr,valueWEI);
         // Review this
         // getCurrencyTokensFromFaucet(valueWEI,curr);
     }
 
-    ///@dev Transfers investment asset from current pool address to the new pool address.
-    function transferIAFromPool(address _newPoolAddr,address curr_addr) onlyInternal
-    {
-        btok=BasicToken(curr_addr);
-        if(btok.balanceOf(this)>0)
-        {
-            btok.transfer(_newPoolAddr,btok.balanceOf(this));
-        }           
-    }
+    
     ///@dev Gets pool balance of a given investmentasset.
     function getBalanceofInvestmentAsset(bytes8 _curr) constant returns(uint balance)
     {
@@ -403,13 +395,7 @@ contract pool is usingOraclize{
         btok=BasicToken(currAddress);
         return btok.balanceOf(poolAddress);
     }
-    ///@dev Gets pool balance of a given investmentasset.
-    function getBalanceOfCurrencyAsset(bytes8 _curr) constant returns(uint balance)
-    {
-        // pd = poolData1(poolDataAddress);
-        btok=BasicToken(pd.getCurrencyAssetAddress(_curr));
-        return btok.balanceOf(poolAddress);
-    }
+    
     function transferIAFromPool(address _newPoolAddr) onlyOwner
     {
         // pd = poolData1(poolDataAddress);
@@ -420,7 +406,42 @@ contract pool is usingOraclize{
             transferIAFromPool(_newPoolAddr,curr_addr);
         }   
     }
-    function  transferPayout(address _to, bytes8 _curr, uint _value) onlyInternal
+    ///@dev Transfers investment asset from current pool address to the new pool address.
+    function transferIAFromPool(address _newPoolAddr,address curr_addr) onlyInternal
+    {
+        btok=BasicToken(curr_addr);
+        if(btok.balanceOf(this)>0)
+        {
+            btok.transfer(_newPoolAddr,btok.balanceOf(this));
+        }           
+    }
+    ///@dev Gets pool balance of a given investmentasset.
+    function getBalanceOfCurrencyAsset(bytes8 _curr) constant returns(uint balance)
+    {
+        // pd = poolData1(poolDataAddress);
+        btok=BasicToken(pd.getCurrencyAssetAddress(_curr));
+        return btok.balanceOf(poolAddress);
+    }
+    function transferCurrencyFromPool(address _newPoolAddr) onlyOwner
+    {
+        // pd = poolData1(poolDataAddress);
+        for(uint64 i=0;i<pd.getAllCurrenciesLen();i++)
+        {
+            bytes8 curr_name=pd.getAllCurrenciesByIndex(i);
+            address curr_addr=pd.getCurrencyAssetAddress(curr_name);
+            transferCurrencyFromPool(_newPoolAddr,curr_addr);
+        }   
+    }
+    ///@dev Transfers investment asset from current pool address to the new pool address.
+    function transferCurrencyFromPool(address _newPoolAddr,address curr_addr) onlyInternal
+    {
+        btok=BasicToken(curr_addr);
+        if(btok.balanceOf(this)>0)
+        {
+            btok.transfer(_newPoolAddr,btok.balanceOf(this));
+        }           
+    }
+    function transferPayout(address _to, bytes8 _curr, uint _value) onlyInternal
     {
         btok=BasicToken(pd.getCurrencyAssetAddress(_curr));
         if(btok.balanceOf(this)>_value)
@@ -482,7 +503,7 @@ contract pool is usingOraclize{
     function makeCoverUsingCA(uint8 prodId, address smartCAdd,bytes4 coverCurr,uint[] coverDetails,uint16 coverPeriod, uint8 _v, bytes32 _r, bytes32 _s) isMemberAndcheckPause
     {
         stok=StandardToken(pd.getCurrencyAssetAddress(coverCurr));
-        stok.transferFrom(msg.sender,this,coverDetails[2]);
+        stok.transferFrom(msg.sender,this,coverDetails[1]);
         q2.verifyCoverDetails(prodId,msg.sender,smartCAdd,coverCurr,coverDetails,coverPeriod,_v,_r,_s);
     }
     function sellNXMTokens(uint sellTokens)isMemberAndcheckPause{

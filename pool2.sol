@@ -293,7 +293,7 @@ contract pool2
                 {
                     // tc1.removeFromPoolFund(curr,sumAssured);
                     q2.removeSAFromCSA(coverid,sumAssured);
-                    p1.subtractQuotationOracalise(coverid);
+                    // p1.subtractQuotationOracalise(coverid);
                     // date:10/11/2017/
                     pd.changeCurrencyAssetVarMin(curr,uint64(SafeMaths.sub(pd.getCurrencyAssetVarMin(curr),sumAssured)));
                     c1.checkLiquidity(curr);
@@ -322,7 +322,7 @@ contract pool2
                 // f1.payoutTransferFromPool(_to , curr , sumAssured_1e18);
                 p1.transferPayout(_to,curr,sumAssured_1e18);
                 // tc1.removeFromPoolFund(curr,sumAssured);
-                p1.subtractQuotationOracalise(coverid);
+                // p1.subtractQuotationOracalise(coverid);
                 q2.removeSAFromCSA(coverid,sumAssured);
                 // date:10/11/2017/
                 pd.changeCurrencyAssetVarMin(curr,uint64(SafeMaths.sub(pd.getCurrencyAssetVarMin(curr),sumAssured)));

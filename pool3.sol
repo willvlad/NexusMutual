@@ -297,7 +297,7 @@ contract pool3
             // pd = poolData1(poolDataAddress);
             uint64 baseMin;
             uint64 varMin;
-            (,baseMin,varMin)=pd.getCurrencyAssetDetails(curr);
+            (,baseMin,varMin)=pd.getCurrencyAssetVarBase(curr);
             CABalance=SafeMaths.div(getCurrencyAssetsBalance(curr),_DECIMAL_1e18);
             //Excess liquidity trade
             if(CABalance>SafeMaths.mul(2,(SafeMaths.add(baseMin,varMin))))
@@ -327,7 +327,7 @@ contract pool3
                 bytes8 MINIACurr;
                 uint64 minIARate;
                 uint makerAmt;uint takerAmt;
-                (,baseMin,varMin)=pd.getCurrencyAssetDetails(curr);
+                (,baseMin,varMin)=pd.getCurrencyAssetVarBase(curr);
                 (,,MINIACurr,minIARate)=pd.getIARankDetailsByDate(pd.getLastDate());
                 //  amount of assest to sell currency asset
                 if(CABalance>=SafeMaths.mul(3,SafeMaths.div(((SafeMaths.add(baseMin,varMin))),2)))
@@ -357,7 +357,7 @@ contract pool3
         bytes8 MAXIACurr;
         uint64 maxIARate;
         uint makerAmt;uint takerAmt;
-        (,baseMin,varMin)=pd.getCurrencyAssetDetails(curr);
+        (,baseMin,varMin)=pd.getCurrencyAssetVarBase(curr);
         (MAXIACurr,maxIARate,,)=pd.getIARankDetailsByDate(pd.getLastDate());
         // amount of asset to buy currency asset
         takerAmt=SafeMaths.sub(SafeMaths.mul(3,SafeMaths.div(SafeMaths.add(baseMin,varMin),2)),CABalance);//*10**18; // multiply with decimals
@@ -506,7 +506,7 @@ contract pool3
         // md=mcrData(mcrDataAddress);
         // pd=poolData1(poolDataAddress);
         CABalance=getCurrencyAssetsBalance(curr);
-        (,baseMin,varMin)=pd.getCurrencyAssetDetails(curr);
+        (,baseMin,varMin)=pd.getCurrencyAssetVarBase(curr);
         // uint lastIndex=SafeMaths.sub(md.getMCRDataLength(),1);
         CARateX100=md.allCurr3DaysAvg(curr);
     }
