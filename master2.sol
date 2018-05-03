@@ -25,7 +25,7 @@ import "./claimsData.sol";
 import "./mcr.sol";
 import "./quotationData.sol";
 import "./poolData.sol";
-import "./usd.sol";
+// import "./usd.sol";
 import "./SafeMaths.sol";
 contract masters2 {
     using SafeMaths for uint;
@@ -49,7 +49,7 @@ contract masters2 {
     quotationData qd;
     poolData pd;
     mcr m1;
-    SupplyToken tok;
+    // SupplyToken tok;
 
     function changeMasterAddress(address _add)
     {
@@ -336,21 +336,21 @@ contract masters2 {
         addAllCurrencies();
     }
 
-    // /// @dev Add investment asset details to pool.
-    // function addCurrencyAssetsDetails() internal
-    // {
-    //     // pd = poolData1(poolDataAddress);
-    //     // uint8 decimals;
-    //     // DGD
-    //     // tok=SupplyToken(0xeee3870657e4716670f185df08652dd848fe8f7e);
-    //     // decimals=tok.decimals();
-    //     pd.pushCurrencyAssetsDetails("ETH",0xeee3870657e4716670f185df08652dd848fe8f7e,1,500,4000,18);
-    //     // ICN
-    //     // tok=SupplyToken(0x21e6b27b23241a35d216f8641c72cfed33085fe9);
-    //     // decimals=tok.decimals();
-    //     pd.pushCurrencyAssetsDetails("DAI",0x21e6b27b23241a35d216f8641c72cfed33085fe9,1,1000,3000,18);
+    /// @dev Add investment asset details to pool.
+    function addCurrencyAssetsDetails() internal
+    {
+        // pd = poolData1(poolDataAddress);
+        // uint8 decimals;
+        // DGD
+        // tok=SupplyToken(0xeee3870657e4716670f185df08652dd848fe8f7e);
+        // decimals=tok.decimals();
+        pd.pushCurrencyAssetsDetails("ETH",0x00,1,50,400,18);
+        // ICN
+        // tok=SupplyToken(0x21e6b27b23241a35d216f8641c72cfed33085fe9);
+        // decimals=tok.decimals();
+        pd.pushCurrencyAssetsDetails("DAI",0xf7c3e9e4a7bb8ca2c1c640f03d76d1ac12887bce,1,50,300,18);
         
-    // }
+    }
     /// @dev Add investment assets names to pool.
     function addAllCurrencies() internal
     {

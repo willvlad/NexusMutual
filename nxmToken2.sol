@@ -18,7 +18,7 @@ pragma solidity ^0.4.11;
 import "./nxmTokenData.sol";
 // import "./quotation2.sol";
 import "./quotationData.sol";
-import "./pool.sol";
+// import "./pool.sol";
 import "./mcr.sol";
 import "./nxmToken.sol";
 import "./master.sol";
@@ -31,7 +31,7 @@ contract nxmToken2{
     // quotation2 q1;
     quotationData qd;
     nxmTokenData td;
-    pool p1;
+    // pool p1;
     mcr m1;
     nxmToken tc1;
     memberRoles mr;
@@ -102,11 +102,11 @@ contract nxmToken2{
         // nxmtokenDataAddress = _add;
         td=nxmTokenData(nxmTokenDataAddress);
     }
-    function changePoolAddress(address poolAddress) onlyInternal
-    {
-        // poolAddress = _add;
-        p1=pool(poolAddress);
-    }
+    // function changePoolAddress(address poolAddress) onlyInternal
+    // {
+    //     // poolAddress = _add;
+    //     p1=pool(poolAddress);
+    // }
     function changeMCRAddress(address mcrAddress) onlyInternal
     {
         // mcrAddress = _add;
@@ -114,8 +114,8 @@ contract nxmToken2{
     }
     function changeMemberRolesAddress(address memberAddress) onlyInternal
     {
-    //   memberAddress = _add;
-      mr=memberRoles(memberAddress);
+        // memberAddress = _add;
+        mr=memberRoles(memberAddress);
     }
     
     /// @dev Locks tokens against a cover.     

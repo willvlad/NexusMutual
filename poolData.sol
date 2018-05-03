@@ -717,5 +717,4 @@ contract poolData
     {
         return(allAPIid[myid].type_of,allAPIid[myid].currency,allAPIid[myid].id,allAPIid[myid].dateAdd,allAPIid[myid].dateUpd);
     }
-    
 }

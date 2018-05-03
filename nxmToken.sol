@@ -533,6 +533,7 @@ contract nxmToken {
                         tc2.rewardToken(stakerAdd,commissionToBePaid);
                         if(i>0)
                             td.setSCAddress_lastCommIndex(_scAddress,SafeMaths.sub(i,1));
+                        commissionToBePaid=0;
                         break;
                     }
                     else{
